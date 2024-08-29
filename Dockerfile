@@ -3,27 +3,32 @@ LABEL authors="shubhamdiwakar"
 
 ENTRYPOINT ["top", "-b"]
 
-# Stage 1: Build the application
-FROM gradle:7.5.0-jdk17 AS build
+# Use an official Gradle image to build the application
+FROM gradle:7.5-jdk11 AS build
+
+# Set the working directory
 WORKDIR /app
 
-# Copy all files into the container
-COPY . .
+# Copy the build.gradle and settings.gradle files
+COPY build.gradle.kts settings.gradle.kts ./
 
-# Build the application (skip tests for faster build)
+# Copy the source code
+COPY src ./src
+
+# Build the application
 RUN gradle clean build -x test
 
-# Stage 2: Run the application
-FROM openjdk:17-jdk-slim
+# Use an official OpenJDK runtime as a base image for the final stage
+FROM openjdk:11-jre-slim
 
 # Set the working directory
 WORKDIR /app
 
 # Copy the built JAR file from the build stage
-COPY --from=build /app/build/libs/ktor-notes_APP_API-all.jar /app/ktor-notes_APP_API.jar
+COPY --from=build /app/build/libs/your-app.jar ./your-app.jar
 
-# Expose the port that the Ktor application will run on
+# Expose the port your application runs on
 EXPOSE 8080
 
 # Command to run the application
-CMD ["java", "-jar", "ktor-notes_APP_API.jar"]
+ENTRYPOINT ["java", "-jar", "your-app.jar"]
